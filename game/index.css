@@ -1,10 +1,10 @@
 .title {
 	text-align: center;
-}
-
-.map {
-	border:1px solid #000000;
-	align-self: center;
+	color: white;
+	height: 24px;
+	font-size: 20px;
+	background-color: seagreen;
+	padding: !0px;
 }
 
 .canvas-container {
@@ -12,14 +12,10 @@
    text-align:center;
 }
 
-.canvas-btn {
-	width: 157px;
-}
+html, body {
+    overflow: hidden;
+    background-color: black;
+    margin: 0 !important;
+    padding: 0 !important;
 
-.info-container {
-	width: 90%;
-	text-align: left;
-	padding-left: 2em;
-	padding-top: 2em;
-	padding-right: 2em;
 }
