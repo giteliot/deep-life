@@ -17,5 +17,41 @@ export function shuffle(array) {
 }
 
 export function scalarToCoord(scalar, width, height) {
-  return [scalar%width, Math.floor(scalar/height)]
+  return [scalar%width, Math.floor(scalar/width)];
 }
+
+export function assert(condition, message) {
+    if (!condition) {
+        throw message || "Assertion failed";
+    }
+}
+
+export const binaryToHex = (number, expectedLength) => {
+  const hex = parseInt(number, 2).toString(16).toUpperCase();
+  return hex.padStart(expectedLength, '0');
+}
+
+export const hexToBinary = (hex, expectedLength) => {
+  const b = parseInt(hex, 16).toString(2);
+  return b.padStart(expectedLength, '0');
+}
+
+export const integerToHex = (number, expectedLength) => {
+  const hex = parseInt(number).toString(16).toUpperCase();
+  return hex.padStart(expectedLength, '0');
+}
+
+export const hexToInteger = (hex, expectedLength) => {
+  const n = parseInt(hex, 16).toString();
+  return n.padStart(expectedLength, '0');
+}
+
+export const getFirstNonZero = (str) => {
+  for (let c of str) {
+    if (c != '0')
+      return c;
+  }
+  return '0';
+}
+
+

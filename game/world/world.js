@@ -1,4 +1,5 @@
-import {shuffle} from '../utils/utils.js'
+import {shuffle} from '../utils/utils.js';
+import {Agent} from '../agent/agent.js';
 
 export const values = {
 	"EMPTY": 0,
@@ -11,16 +12,16 @@ export class World {
 		this.width = width;
 		this.height = height;
 		this.foodDensity = foodDensity;
-		this.agents = [];
+		this.agents = {};
 		this.foods = [];
 
 		this.state = Array(this.height*this.width).fill(0);
 
 		this.generateStartingFood();
 
-		console.log(`initializing WORLD with parameters 
-			\nsize=(${this.width},${this.height})
-			\ndensity=${this.foodDensity}`);
+		console.log(`initializing WORLD with parameters`
+			+`\nsize=(${this.width},${this.height})`
+			+`\nfood density=${this.foodDensity}`);
 	}
 
 	getFreeCellsIndexes() {
@@ -41,5 +42,20 @@ export class World {
 		shuffle(this.getFreeCellsIndexes()).slice(0, totalFood).forEach(i => {
 			this.addFood(i);
 		});
+	}
+
+	addAgent(agent, cellIndex) {
+		this.state[cellIndex] =  values.AGENT;
+		this.agents[cellIndex] = agent;
+	}
+
+	addAgents(dna, numAgents) {
+		console.log(`adding ${numAgents} agents with DNA ${dna}`)
+		const agent = new Agent(dna);
+		for (let k = 0; k < numAgents; k++) {
+			const freeCells = this.getFreeCellsIndexes();
+			const cell = Math.floor(Math.random() * freeCells.length);
+			this.addAgent(agent, cell);
+		}
 	}
 }

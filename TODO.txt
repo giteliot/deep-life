@@ -1,3 +1,29 @@
 TODO
 
-- check why world area is weird and sometimes out of screen/canvas
+- implement brain/NN
+
+
+DNA Notes
+
+- make the agent
+	- goal is to eat and reproduce, for now by itself
+	- costructor takes DNA in, whichs contains every info to make it
+		- field_view FW
+		- max_energy ME
+		- speed (1/) SP
+		- layers LL
+		- neurons NN
+		- learning speed (1/) LS 
+
+	- stats are:
+		- current energy (same as life for now?); 0 energy dies; full energy it reproduces;
+			- every move consumes energy
+			- every foods gains energy
+		- ticks to next move
+
+
+DNA
+
+FW  	ME      SP     LL  NN     LS
+0/1*24	1-4095 1-15   1-2  1-4095x2 1-4095
+FFFFFF  FFF		F      0   FFF*2       FFF

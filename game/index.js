@@ -13,6 +13,7 @@ const gridWidth = Math.floor(width/config.cellSize);
 const gridHeight = Math.floor(height/config.cellSize)-1;
 
 const world = new World(gridWidth, gridHeight, config.density);
+world.addAgents("00180000F500F000064", 10);
 const ui = new UI(canvas, world, config.cellSize);
 ui.render();
 

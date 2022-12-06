@@ -3,8 +3,8 @@ import {scalarToCoord} from '../utils/utils.js';
 
 const COLOR = {
 	[values.EMPTY]: "black",
-	[values.FOOD]: "green",
-	[values.AGENT]: "white"
+	[values.FOOD]: "#8aecff",
+	[values.AGENT]: "#d3d3d3"
 }
 
 export class UI {
@@ -18,7 +18,7 @@ export class UI {
 
 	renderBackground() {
 		const ctx = this.canvas.getContext("2d");
-		ctx.fillStyle = "black";
+		ctx.fillStyle = COLOR[values.EMPTY];
 		ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
@@ -28,10 +28,17 @@ export class UI {
 		this.world.state.forEach((value, index) => {
 			if (value == values.EMPTY)
 				return;
-			ctx.fillStyle = COLOR[value];
+			console.log()
+			ctx.fillStyle = value == values.AGENT? this.world.agents[index].color: COLOR[value];
 			let coord = scalarToCoord(index, this.world.width, this.world.height);
-			console.log(`coloring ${coord[0]*this.cellSize}, ${coord[1]*this.cellSize}, ${this.cellSize}, ${COLOR[value]}`);
+			//console.log(`coloring ${coord[0]}, ${coord[1]}, ${COLOR[value]}`);
 			ctx.fillRect(coord[0]*this.cellSize, coord[1]*this.cellSize, this.cellSize, this.cellSize);
+
+			if (value == values.AGENT) {
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = COLOR[value];
+				ctx.strokeRect(coord[0]*this.cellSize, coord[1]*this.cellSize, this.cellSize, this.cellSize);
+			}
 		});
 	}
 }
