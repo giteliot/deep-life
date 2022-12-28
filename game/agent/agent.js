@@ -39,14 +39,19 @@ export class Agent {
 	}
 
 	getAction(state) {
-		if (this.incubating >= 0)
-			console.log(this.ticksToAction)
-		this.ticksToAction--;
+		
 		if (this.incubating > 0) {
 			this.incubating--;
+		} else {
+			this.ticksToAction--;
+			if (this.ticksToAction < 0) {
+				this.ticksToAction = this.maxTTA;
+			}
 		}
-		if (this.incubating <= 0 & this.ticksToAction > 0)
-			return; 
+
+		if (this.incubating <= 0 && this.ticksToAction > 0) {
+			return;
+		}
 
 		let action;
 		if (Math.random() < this.epsilon) {
@@ -57,21 +62,13 @@ export class Agent {
 	        action = this.brain.predict(stateTensor).argMax(-1).dataSync()[0];
 	      });
 	    }
+
 		return action;
 	}
 
 	playStep(step) {
 		const isIncubation = this.incubating > 0;
-		const isActionable = this.ticksToAction == 0;
-
-		if (isIncubation && this.incubating <= 0) {
-			console.log("STOPPED INCUBATING")
-			this.energy = this.maxEnergy/2;
-		}
-
-		if (isActionable) {
-			this.ticksToAction = this.maxTTA;
-		}
+		const isActionable = step.action;
 
 		let reward = 0;
 		if (isActionable | isIncubation)

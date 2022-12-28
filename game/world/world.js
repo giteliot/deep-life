@@ -1,5 +1,5 @@
 import {shuffle} from '../utils/utils.js';
-import {Agent} from '../agent/agent.js';
+import {Agent, ACTIONS} from '../agent/agent.js';
 
 export const values = {
 	"EMPTY": 0,
@@ -81,17 +81,17 @@ export class World {
 	getNewPosition(oldPosition, action) {
 		let newPosition = oldPosition;
 		switch(action) {
-			case 1:
+			case ACTIONS.UP: 
 				newPosition = oldPosition > this.width? oldPosition-this.width: oldPosition;
 				break;
-			case 2:
-				newPosition = oldPosition%this.height > 0? oldPosition-1 : oldPosition;
+			case ACTIONS.LEFT:
+				newPosition = oldPosition%this.width > 0? oldPosition-1 : oldPosition;
 				break;
-			case 3:
+			case ACTIONS.DOWN:
 				newPosition = oldPosition < this.height*(this.width-1)? oldPosition+this.width : oldPosition;
 				break;
-			case 4:
-				newPosition = oldPosition%this.height < this.width-1? oldPosition+1 : oldPosition;
+			case ACTIONS.RIGHT:
+				newPosition = oldPosition%this.width < this.width-1? oldPosition+1 : oldPosition;
 				break;
 			default:
 				break;
@@ -143,6 +143,7 @@ export class World {
 
 				
 				if (position != newPosition) {
+					// console.log(`${position} -> ${newPosition}, ${actions.agent.action}`)
 					actions.agent.hasMoved = true;
 					this.removeAgent(position, k);
 					k--;
