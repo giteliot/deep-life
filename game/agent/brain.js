@@ -10,11 +10,10 @@ export function createDeepQNetwork(inputs, unitsArr, numActions) {
        kernelInitializer:init}
     ));
   }
-  model.add(tf.layers.dense(
 
+  model.add(tf.layers.dense(
     {units: numActions,
-       activation:'linear'
-     }
+       activation:'linear'}
     ));
   return model;
 }

@@ -28,13 +28,13 @@ export class UI {
 		this.world.state.forEach((value, index) => {
 			if (value == values.EMPTY)
 				return;
-			console.log()
-			ctx.fillStyle = value == values.AGENT? this.world.agents[index].color: COLOR[value];
+
+			ctx.fillStyle = value%values.AGENT == 0? this.world.agents[index][0].color: COLOR[values.FOOD];
 			let coord = scalarToCoord(index, this.world.width, this.world.height);
 			//console.log(`coloring ${coord[0]}, ${coord[1]}, ${COLOR[value]}`);
 			ctx.fillRect(coord[0]*this.cellSize, coord[1]*this.cellSize, this.cellSize, this.cellSize);
 
-			if (value == values.AGENT) {
+			if (value%values.AGENT == 0) {
 				ctx.lineWidth = 1;
 				ctx.strokeStyle = COLOR[value];
 				ctx.strokeRect(coord[0]*this.cellSize, coord[1]*this.cellSize, this.cellSize, this.cellSize);

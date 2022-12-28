@@ -16,6 +16,8 @@ export function shuffle(array) {
   return array;
 }
 
+export const randomInt = (min, max) => Math.floor(Math.random() * (max+1 - min) + min);
+
 export function scalarToCoord(scalar, width, height) {
   return [scalar%width, Math.floor(scalar/width)];
 }

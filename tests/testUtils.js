@@ -1,4 +1,4 @@
-import {scalarToCoord, binaryToHex, hexToBinary, integerToHex, hexToInteger} from '../game/utils/utils.js';
+import {scalarToCoord, binaryToHex, hexToBinary, integerToHex, hexToInteger, randomInt} from '../game/utils/utils.js';
 import { equal } from "assert";
 
 describe('scalarToCoord', () => {
@@ -44,6 +44,16 @@ describe('integerToHex', () => {
 describe('hexToInteger', () => {
 	it('07A to 122', () => {
 		equal(hexToInteger('07A', 4), '0122');
+	});
+});
+
+describe('random', () => {
+	it('r', () => {
+		const o = [];
+		for (let k = 0; k < 100; k++) {
+			o.push(randomInt(0, 5))
+		}
+		console.log(o);
 	});
 });
 
