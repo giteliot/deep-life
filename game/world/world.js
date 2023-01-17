@@ -133,27 +133,35 @@ export class World {
 			for (let k = 0; k < totAgents; k++) {
 				tot++;
 				const agent = agents[k];
-				actions.agent = {};
-				actions.agent.state = this.getAgentState(position);
-				actions.agent.action = agent.getAction(actions.agent.state);
-				if (!actions.agent.action)
-					continue;
-				const newPosition = this.getNewPosition(position, actions.agent.action);
-				actions.agent.hasMoved = false;
-
+				const key = position*10+k;
 				
+				actions[key] = {};
+				actions[key].agent = agent;
+				const step = {};
+				actions[key].step = step;
+				step.state = this.getAgentState(position);
+				step.action = agent.getAction(step.state);
+				if (step.action == undefined) {
+					continue;
+				}
+				const newPosition = this.getNewPosition(position, step.action);
+				step.hasMoved = false;
+
+				console.log(`${position} -> ${agent.incubating}`)
 				if (position != newPosition) {
 					// console.log(`${position} -> ${newPosition}, ${actions.agent.action}`)
-					actions.agent.hasMoved = true;
+					step.hasMoved = true;
 					this.removeAgent(position, k);
 					k--;
 					totAgents--;
 					this.addAgent(agent, newPosition);
 				}
-				actions.agent.ate = this.state[position]%values.FOOD == 0	
+
+				actions[key].position = newPosition;
+				// console.log(agent.energy)
+				step.ate = this.state[newPosition]%values.FOOD == 0	
 			}
 		}
-
 		this.state.forEach((value, index) => {
 			while (value%values[values.FOOD] == 0) {
 				value = value/values[values.FOOD];
@@ -162,24 +170,24 @@ export class World {
 		});
 
 		// add new food?
-		for (let [position, agents] of Object.entries(this.agents)) {
-			position = Number(position);
-			const totAgents = agents.length;
-			for (let k = 0; k < totAgents; k++) {
+		for (let k of Object.keys(actions)) {
+			let step = actions[k].step;
+			let agent = actions[k].agent;
+			let position = actions[k].position;
 
-				const agent = agents[k];
-				if (!actions.agent.action)
-					continue;
-				actions.agent.nextState = this.getAgentState(position);
-				const outcomes = agent.playStep(actions.agent);
-				if (outcomes.isDead) {
-					this.removeAgent(position,k);
-				}
-				if (outcomes.doesProcreate) {
-					console.log("PROCREATING "+position);
-					// TODO add DNA evolution logic
-					this.addAgent(new Agent(agent.dna.dna), position);
-				}
+			if (step.action == undefined) {
+				continue;
+			}
+			step.nextState = this.getAgentState(position);
+			const outcomes = agent.playStep(step);
+			if (outcomes.isDead) {
+				this.removeAgent(position,k);
+			}
+			if (outcomes.doesProcreate) {
+				console.log("PROCREATING "+position);
+				// TODO add DNA evolution logic
+				let child = new Agent(agent.dna.dna)
+				this.addAgent(child, position);
 			}
 		}
 
