@@ -24,6 +24,7 @@ const ENERGY_CONSUMPTION = 1;
 export class Agent {
 	constructor(dnaStr) {
 		// console.log(`agent born with dna ${dnaStr}`)
+		this.id = Math.floor(Math.random() * 100000000);
 		this.dna = new DNA(dnaStr);
 		this.color = this.dna.color;
 		this.maxEnergy = this.dna.maxEnergy;
@@ -49,15 +50,6 @@ export class Agent {
 
 	getAction(state) {
 
-		if (this.incubating > 0) {
-			this.incubating--;
-		} else {
-			this.ticksToAction--;
-			if (this.ticksToAction < 0) {
-				this.ticksToAction = this.maxTTA;
-			}
-		}
-
 		if (this.incubating <= 0 && this.ticksToAction > 0) {
 			return;
 		}
@@ -81,14 +73,36 @@ export class Agent {
 
 	playStep(step) {
 		
+		// should do an action
 		const isIncubation = this.incubating > 0;
 		const isActionable = step.action;
+
+		if (!isIncubation && step.action != undefined) {
+			console.log(`${this.id} - ${this.energy}`);
+			console.log(step);
+		}
 
 		if (this.incubating == 0) {
 			this.incubating--
 			this.energy = this.maxEnergy/2;
 		}
 
+		// update waiting
+		if (this.incubating > 0) {
+
+			this.incubating--;
+		} else {
+			this.ticksToAction--;
+			if (this.ticksToAction < 0) {
+				this.ticksToAction = this.maxTTA;
+			}
+		}
+		
+		if (step.action == undefined) {
+			return
+		}
+
+		// actually compute action
 		this.frames++;
 
 		let reward = 0;
@@ -123,6 +137,7 @@ export class Agent {
 		// console.log(`energy ${this.energy}/${this.maxEnergy}`);
 		step.reward = reward;
 
+		// train
 		this.memory.append(step);
 
 		if (!isIncubation) {
@@ -136,21 +151,13 @@ export class Agent {
 	    const batch = this.memory.sample(this.batchSize);
 
 	    const lossFunction = () => tf.tidy(() => {
-
-	    	for (let example of batch) {
-	    		if (example == null) {
-	    			console.log(batch);
-	    		    console.log(this.frames);
-	    		    console.log(this.incubating);
-	    		    }
-	    	}
 	    	const stateTensor = this.getStateTensor(
 	    	    batch.map(example => example.state)
 	    	    );
+
 	    	const actionTensor = tf.tensor1d(
 	    	    batch.map(example => example.action), 'int32');
 
-	    	// here lies the problem, idk why tho
 	    	const qs = this.brain.apply(stateTensor, {training: true})
 	    	    .mul(tf.oneHot(actionTensor, NUM_ACTIONS)).sum(-1);
 
@@ -162,11 +169,15 @@ export class Agent {
 
 	    	const nextMaxQTensor = 
 	    	    this.brain.predict(nextStateTensor).max(-1);
+
 	    	const doneMask = tf.scalar(1).sub(
 	    	    tf.tensor1d(batch.map(example => example[3])).asType('float32'));
 	    	const targetQs =
 	    	    rewardTensor.add(nextMaxQTensor.mul(doneMask).mul(this.gamma));
-	    	return tf.losses.meanSquaredError(targetQs, qs);
+
+	    	const mqe = tf.losses.meanSquaredError(targetQs, qs);
+
+	    	return mqe;
 
 	    });
 

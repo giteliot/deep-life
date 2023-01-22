@@ -1,3 +1,5 @@
 TODO
 
-- fix incubating going down too fast
+- are they procreating correctly?
+- are they learning anything?
+- reward seems off

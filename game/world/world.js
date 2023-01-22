@@ -16,6 +16,7 @@ export class World {
 		this.foods = [];
 
 		this.state = Array(this.height*this.width).fill(0);
+		this.stepNumber = 0;
 
 		this.generateStartingFood();
 
@@ -27,7 +28,7 @@ export class World {
 	getFreeCellsIndexes() {
 		const fCells = [];
 		for (let i = 0; i < this.state.length; i++)
-			if (this.state[i] == values.EMPTY)
+			if (this.state[i] == values.EMPTY || this.state[i]%values.AGENT != 0)
 				fCells.push(i)
 		return fCells;
 	}
@@ -55,16 +56,19 @@ export class World {
 		}
 	}
 
-	removeAgent(position, kth) {
+	removeAgent(position, id) {
 
-		if (this.agents[position].length > 1) {
-			const k = Math.min(kth, this.agents.length-1);
-			this.agents[position].splice(k, 1);
-		} else {
-			delete this.agents[position];
-		}
+		let totAgents = this.agents[position].length;
+			for (let k = 0; k < totAgents; k++) {
+				if (this.agents[position][k].id == id) {
+					this.agents[position].splice(k,1);
+					if (this.agents[position].length == 0)
+						delete this.agents[position];
+					break;
+				}
+		}	
 
-		this.state[position] = this.state[position] == values.AGENT ? 0 : this.state[position]/values.AGENT;
+		this.state[position] = this.state[position] == values.AGENT ? 0 : Math.floor(this.state[position]/values.AGENT);
 	}
 
 	addAgents(dna, numAgents) {
@@ -125,43 +129,82 @@ export class World {
 	}
 
 	playStep() {
-		let tot = 0;
+		this.stepNumber++;
+		// console.log("step "+this.stepNumber)
 	   	const actions = {};
 		for (let [position, agents] of Object.entries(this.agents)) {
 			position = Number(position);
 			let totAgents = agents.length;
+
 			for (let k = 0; k < totAgents; k++) {
-				tot++;
 				const agent = agents[k];
-				const key = position*10+k;
+				const key = agent.id;
 				
 				actions[key] = {};
 				actions[key].agent = agent;
 				const step = {};
 				actions[key].step = step;
+
 				step.state = this.getAgentState(position);
 				step.action = agent.getAction(step.state);
+
 				if (step.action == undefined) {
 					continue;
 				}
 				const newPosition = this.getNewPosition(position, step.action);
-				step.hasMoved = false;
+				step.hasMoved = position != newPosition;
 
-				console.log(`${position} -> ${agent.incubating}`)
-				if (position != newPosition) {
-					// console.log(`${position} -> ${newPosition}, ${actions.agent.action}`)
-					step.hasMoved = true;
-					this.removeAgent(position, k);
-					k--;
-					totAgents--;
-					this.addAgent(agent, newPosition);
-				}
-
-				actions[key].position = newPosition;
-				// console.log(agent.energy)
-				step.ate = this.state[newPosition]%values.FOOD == 0	
+				step.position = position;
+				step.newPosition = newPosition;
 			}
 		}
+
+		// console.log(actions);
+
+		// add new food?
+		for (let k of Object.keys(actions)) {
+			let step = actions[k].step;
+			let agent = actions[k].agent;
+			// console.log(agent.incubating);
+
+			step.ate = this.state[step.newPosition]%values.FOOD == 0	
+
+			if (step.action != undefined) {
+				step.nextState = this.getAgentState(step.newPosition);
+			}
+			
+			const outcomes = agent.playStep(step);
+
+			if (!outcomes)
+				continue;
+
+			actions[k].isDead = outcomes.isDead;
+			
+			if (outcomes.doesProcreate) {
+				console.log("PROCREATING "+step.newPosition);
+				// TODO add DNA evolution logic
+				let child = new Agent(agent.dna.dna)
+				this.addAgent(child, step.newPosition);
+			}
+		}
+
+		for (let k of Object.keys(actions)) {
+			let position = actions[k].step.position;
+			let newPosition = actions[k].step.newPosition;
+			let isDead = actions[k].isDead;
+			let agent = actions[k].agent;
+
+			if (newPosition && position != newPosition) {
+				// console.log(`${position} -> ${newPosition}, ${actions.agent.action}`)
+				this.removeAgent(position, k);
+				this.addAgent(agent, newPosition);
+			}
+
+			if (isDead) {
+				this.removeAgent(position,k);
+			}
+		}
+
 		this.state.forEach((value, index) => {
 			while (value%values[values.FOOD] == 0) {
 				value = value/values[values.FOOD];
@@ -169,30 +212,9 @@ export class World {
 			this.state[index] = value;
 		});
 
-		// add new food?
-		for (let k of Object.keys(actions)) {
-			let step = actions[k].step;
-			let agent = actions[k].agent;
-			let position = actions[k].position;
-
-			if (step.action == undefined) {
-				continue;
-			}
-			step.nextState = this.getAgentState(position);
-			const outcomes = agent.playStep(step);
-			if (outcomes.isDead) {
-				this.removeAgent(position,k);
-			}
-			if (outcomes.doesProcreate) {
-				console.log("PROCREATING "+position);
-				// TODO add DNA evolution logic
-				let child = new Agent(agent.dna.dna)
-				this.addAgent(child, position);
-			}
-		}
-
-		const stillAlive = this.countAliveAgents();
+		// const stillAlive = this.countAliveAgents();
 		// console.log(`step ended - ${stillAlive} agents remaining`);
-		return stillAlive < 1
+		// return stillAlive < 1
+		return false;
 	}
 }
