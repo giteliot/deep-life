@@ -1,6 +1,5 @@
 import {World} from '../game/world/world.js';
-import { equal } from "assert";
-import { expect} from "chai";
+import { equal, deepEqual } from "assert";
 import {ACTIONS} from '../game/agent/agent.js';
 
 describe('World Creation', () => {
@@ -51,19 +50,14 @@ describe('getNewPosition', () => {
 
 
 describe('getAgentState', () => {
-  const world = new World(3, 4, 0);
-  it('4 -> 0', () => {
-    expect(world.getAgentState(4)).deep.to.equal([0,0,0,0,0,0,0,0]);
+  const world = new World(5, 5, 0);
+  it('center -> all 0s', () => {
+    deepEqual(world.getAgentState(12), [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   });
 
-  it('0 -> -1-1-1-11-100', () => {
-    expect(world.getAgentState(0)).deep.to.equal([-1,-1,-1,-1,0,-1,0,0]);
+  it('up left -> half 0s', () => {
+    deepEqual(world.getAgentState(0), [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, 0, 0, 0, -1, -1, 0, 0, 0]);
   });
-
-  it('11 -> 78-110-1-1-1-1', () => {
-    expect(world.getAgentState(11)).deep.to.equal([0,0,-1,0,-1,-1,-1,-1]);
-  });
-
 });
 
 

@@ -2,10 +2,16 @@ export function createDeepQNetwork(inputs, unitsArr, numActions) {
   const model = tf.sequential();
   const init = tf.initializers.heUniform();
 
-  for (let units of unitsArr) {
+  model.add(tf.layers.dense(
+      {units: unitsArr[0],
+       inputShape:[inputs],
+       activation:'relu',
+       kernelInitializer:init}
+    ));
+
+  for (let units of unitsArr.slice(1)) {
     model.add(tf.layers.dense(
       {units: units,
-       inputShape:[inputs],
        activation:'relu',
        kernelInitializer:init}
     ));

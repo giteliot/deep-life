@@ -1,4 +1,4 @@
-import {shuffle} from '../utils/utils.js';
+import {shuffle, range} from '../utils/utils.js';
 import {Agent, ACTIONS} from '../agent/agent.js';
 
 export const values = {
@@ -38,8 +38,11 @@ export class World {
 		this.state[index] = values.FOOD;
 	}
 
-	generateStartingFood() {
-		const totalFood = this.width*this.height*this.foodDensity;
+	generateStartingFood(quantity) {
+		let totalFood = quantity;
+		if (!totalFood)
+			totalFood = this.width*this.height*this.foodDensity;
+
 		shuffle(this.getFreeCellsIndexes()).slice(0, totalFood).forEach(i => {
 			this.addFood(i);
 		});
@@ -58,7 +61,8 @@ export class World {
 
 	removeAgent(position, id) {
 
-		let totAgents = this.agents[position].length;
+		for (let [position, agents] of Object.entries(this.agents)) {
+			let totAgents = this.agents[position].length;
 			for (let k = 0; k < totAgents; k++) {
 				if (this.agents[position][k].id == id) {
 					this.agents[position].splice(k,1);
@@ -66,7 +70,8 @@ export class World {
 						delete this.agents[position];
 					break;
 				}
-		}	
+			}
+		}
 
 		this.state[position] = this.state[position] == values.AGENT ? 0 : Math.floor(this.state[position]/values.AGENT);
 	}
@@ -105,19 +110,26 @@ export class World {
 	}
 
 	getAgentState(position) {
-		const up = position-this.width;
-		const down = position+this.width;
-		const ul = up >= 0 & position%this.width > 0 ? this.state[up-1] : -1;
-		const u = up >= 0 ? this.state[up] : -1;
-		const ur = up >= 0 & position%this.width < this.width-1  ? this.state[up+1] : -1;
-		const l = position%this.width > 0 ? this.state[position-1] : -1;
-		const r = position%this.width < this.width-1 ? this.state[position+1] : -1;
-		const bl = down < this.height*(this.width-1) & position%this.width > 0 ? this.state[down-1] : -1;
-		const b = down < this.height*(this.width-1) ? this.state[down] : -1;
-		const br = down < this.height*(this.width-1) & position%this.width < this.width-1  ? this.state[down+1] : -1;
-		return [ ul, u, ur,
-				l, r, 
-				bl, b, br];
+		const centerRow = Math.floor(position/this.width);
+
+		const valueState = (i, row) => {
+			if (i < row*this.width || i > (row+1)*this.width-1) {
+				return -1;
+			}
+			return this.state[i];
+		}
+
+		const values = range(-2,2).map((k) => {
+			const row = centerRow+k;
+			if (row < 0 || row > this.height)
+				return Array(5).fill(-1);
+			return range(position+this.width*k-2, position+this.width*k+2)
+				.map((i) => valueState(i, row));
+		}).flat();
+
+		values.splice(12, 1)
+				
+		return values;
 	}
 
 	countAliveAgents() {
@@ -129,6 +141,8 @@ export class World {
 	}
 
 	playStep() {
+		if (this.stepNumber % 20 == 0)
+			console.log(`num tensors = ${tf.memory().numTensors}`);
 		this.stepNumber++;
 		// console.log("step "+this.stepNumber)
 	   	const actions = {};
@@ -167,7 +181,7 @@ export class World {
 			let agent = actions[k].agent;
 			// console.log(agent.incubating);
 
-			step.ate = this.state[step.newPosition]%values.FOOD == 0	
+			step.ate = this.state[step.newPosition] > 0 && this.state[step.newPosition]%values.FOOD == 0;
 
 			if (step.action != undefined) {
 				step.nextState = this.getAgentState(step.newPosition);
@@ -181,10 +195,14 @@ export class World {
 			actions[k].isDead = outcomes.isDead;
 			
 			if (outcomes.doesProcreate) {
-				console.log("PROCREATING "+step.newPosition);
+				console.log(`${agent.id} PROCREATING`);
 				// TODO add DNA evolution logic
-				let child = new Agent(agent.dna.dna)
-				this.addAgent(child, step.newPosition);
+				// child.brain = agent.brain;
+
+				for (let k = 0; k < agent.offspring; k++) {
+					let child = new Agent(agent.generateChildDNA())
+					this.addAgent(child, step.newPosition);
+				}
 			}
 		}
 
@@ -201,7 +219,10 @@ export class World {
 			}
 
 			if (isDead) {
+				agent.brain.dispose();
 				this.removeAgent(position,k);
+				this.addFood(position);
+				this.addFood(newPosition);
 			}
 		}
 
@@ -212,9 +233,8 @@ export class World {
 			this.state[index] = value;
 		});
 
-		// const stillAlive = this.countAliveAgents();
+		const stillAlive = this.countAliveAgents();
 		// console.log(`step ended - ${stillAlive} agents remaining`);
-		// return stillAlive < 1
-		return false;
+		return stillAlive < 1;
 	}
 }

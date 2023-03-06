@@ -3,7 +3,7 @@ import {World} from './world/world.js';
 
 const config = {
     "cellSize": 16,
-    "density": 0.6
+    "density": 0.2
 }
 
 const canvas = document.getElementById("main-canvas");
@@ -13,7 +13,9 @@ const gridWidth = Math.floor(width/config.cellSize);
 const gridHeight = Math.floor(height/config.cellSize)-1;
 
 const world = new World(gridWidth, gridHeight, config.density);
-world.addAgents("06F500F000064", 1);
+//world.addAgents("06F200F000064", 1);
+world.addAgents("060200F110054", 1);
+
 const ui = new UI(canvas, world, config.cellSize);
 ui.render();
 
@@ -26,6 +28,8 @@ const lifeCycle = () => {
     ui.render();
 }
 
-const intId = setInterval(lifeCycle, 200);
+const intId = setInterval(lifeCycle, 100);
 
-setTimeout(() => {clearInterval(intId); console.log("SIMULATION ENDED")}, 60*1000)
+const killAll = () => clearInterval(intId);
+
+setTimeout(() => {clearInterval(intId); console.log("SIMULATION ENDED")}, 1*1000)

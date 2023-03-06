@@ -12,11 +12,11 @@ export const ACTIONS = {
 }
 
 const NUM_ACTIONS = 5;
-const VISION = 8;
+const VISION = 24;
 const ENERGY = {
 	"INCUBATING": 0.1,
-	"STATIC": 0.1,
-	"MOVE": 0.9
+	"STATIC": 0.2,
+	"MOVE": 2
 }
 const ENERGY_WHILE_INCUBATION = 0.1;
 const ENERGY_CONSUMPTION = 1;
@@ -34,6 +34,7 @@ export class Agent {
 		this.brain = createDeepQNetwork(VISION, this.dna.neurons, NUM_ACTIONS)
 		this.incubating = 20; //should be part of DNA?
 		this.memory = new ReplayMemory(this.incubating);
+		this.offspring = 3;
 
 		this.frames = 0;
 		this.maxFrames = this.incubating*10;
@@ -42,7 +43,32 @@ export class Agent {
 		this.optimizer = tf.train.adam(1/this.dna.learningSpeed);
 		this.gamma = 0.99;
 		this.batchSize = this.incubating/2;
+
+		this.avgReward = new MovingAverage(100);
 	}
+
+	generateChildDNA() {
+		const parentDna = this.dna.dna;
+		let childDNA = "";
+
+	  	for (let i = 0; i < parentDna.length; i++) {
+
+	    	if (Math.random() < 0.1) {
+		      var decimalValue = parseInt(parentDna[i], 16);
+		      if (Math.random() < 0.5) {
+		        decimalValue = (decimalValue + 1) % 16;
+		      } else {
+		        decimalValue = (decimalValue + 15) % 16;
+		      }
+		      var hexValue = decimalValue.toString(16);
+		      childDNA += hexValue;
+		    } else {
+		      childDNA += parentDna[i];
+		    }
+		  }
+		  return childDNA;
+	}
+
 
 	getStateTensor(state) {
 		return tf.tensor(state);
@@ -78,8 +104,8 @@ export class Agent {
 		const isActionable = step.action;
 
 		if (!isIncubation && step.action != undefined) {
-			console.log(`${this.id} - ${this.energy}`);
-			console.log(step);
+			// console.log(`${this.id} - ${this.energy}`);
+			// console.log(step);
 		}
 
 		if (this.incubating == 0) {
@@ -102,16 +128,15 @@ export class Agent {
 			return
 		}
 
+
 		// actually compute action
 		this.frames++;
 
-		let reward = 0;
-		if (isActionable | isIncubation)
-			reward++;
+		let reward = -1;
 
 		if (step.ate) {
-			this.energy += 10;
-			reward += 10;
+			this.energy += 40;
+			reward += 20;
 		}
 
 		if (!step.hasMoved) {
@@ -126,12 +151,13 @@ export class Agent {
 			"doesProcreate": false
 		};
 		if (this.energy < 0) {
-			console.log("agent dead for lack of energy");
+			console.log(`${this.id} dead for lack of energy`);
 			outcomes.isDead = true;
 		}
 		
 		if (this.energy >= this.maxEnergy && !isIncubation) {
 			outcomes.doesProcreate = true;
+			this.reward += 90;
 			this.energy = this.maxEnergy/2;
 		}
 		// console.log(`energy ${this.energy}/${this.maxEnergy}`);
@@ -142,6 +168,11 @@ export class Agent {
 
 		if (!isIncubation) {
 			this.train();
+		}
+
+		this.avgReward.append(step.reward);
+		if (this.frames%100 == 0) {
+			console.log(`${this.id} - avgReward = ${this.avgReward.average()}`);
 		}
 
 		return outcomes;
@@ -187,4 +218,21 @@ export class Agent {
 	}
 }
 
+class MovingAverage {
+  constructor(bufferLength) {
+    this.buffer = [];
+    for (let i = 0; i < bufferLength; ++i) {
+      this.buffer.push(null);
+    }
+  }
+
+  append(x) {
+    this.buffer.shift();
+    this.buffer.push(x);
+  }
+
+  average() {
+    return this.buffer.reduce((x, prev) => x + prev) / this.buffer.length;
+  }
+}
 

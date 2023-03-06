@@ -56,4 +56,5 @@ export const getFirstNonZero = (str) => {
   return '0';
 }
 
+export const range = (n,m) => Array(Math.abs(n-m)+1).fill().map((_, i) => i + n);
 

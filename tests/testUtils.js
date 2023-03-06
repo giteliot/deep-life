@@ -1,5 +1,5 @@
-import {scalarToCoord, binaryToHex, hexToBinary, integerToHex, hexToInteger, randomInt} from '../game/utils/utils.js';
-import { equal } from "assert";
+import {scalarToCoord, binaryToHex, hexToBinary, integerToHex, hexToInteger, randomInt, range} from '../game/utils/utils.js';
+import { equal, deepEqual } from "assert";
 
 describe('scalarToCoord', () => {
 	it('5, in [6, N] is (0, 5)', () => {
@@ -54,6 +54,18 @@ describe('random', () => {
 			o.push(randomInt(0, 5))
 		}
 		console.log(o);
+	});
+});
+
+describe('range', () => {
+	it('ranges from -2 to 3', () => {
+		deepEqual(range(-2,3), [ -2, -1, 0, 1, 2, 3 ]);
+	});
+});
+
+describe('range', () => {
+	it('ranges from 3 to 7', () => {
+		deepEqual(range(-3,-1), [ -3, -2, -1]);
 	});
 });
 

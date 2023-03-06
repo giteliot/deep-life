@@ -1,5 +1,3 @@
 TODO
 
-- are they procreating correctly?
-- are they learning anything?
-- reward seems off
+- find a smarter way to get vision tensor;
